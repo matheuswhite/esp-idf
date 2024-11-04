@@ -25,6 +25,7 @@ extern "C" {
 #define PSRAM_RESET                  0x99
 #define PSRAM_SET_BURST_LEN          0xC0
 #define PSRAM_DEVICE_ID              0x9F
+#define PSRAM_MFR_ISSI_ID            0x9D
 
 #define PSRAM_FAST_READ_DUMMY        4
 #define PSRAM_FAST_READ_QUAD_DUMMY   6
@@ -32,6 +33,7 @@ extern "C" {
 // ID
 #define PSRAM_ID_BITS_NUM            24
 #define PSRAM_EID_BITS_NUM           48
+#define PSRAM_ID_MFR_M               0xff
 #define PSRAM_ID_KGD_M               0xff
 #define PSRAM_ID_KGD_S               8
 #define PSRAM_ID_KGD                 0x5d
@@ -45,9 +47,17 @@ extern "C" {
 //    0     |   0     |   0     |     16
 //    0     |   0     |   1     |     32
 //    0     |   1     |   0     |     64
+//
+//   For ISSI Manufacturer the below table is used instead:
+//   BIT47  |  BIT46  |  BIT45  |  SIZE(MBIT)
+//   -------------------------------------
+//    0     |   0     |   0     |      8
+//    0     |   0     |   1     |     16
+//    0     |   1     |   0     |     32
 #define PSRAM_EID_BIT_47_45_M        0x07
 #define PSRAM_EID_BIT_47_45_S        5
 
+#define PSRAM_MFR(id)                ((id) & PSRAM_ID_MFR_M)
 #define PSRAM_KGD(id)                (((id) >> PSRAM_ID_KGD_S) & PSRAM_ID_KGD_M)
 #define PSRAM_EID_BIT_47_40(id)      (((id) >> PSRAM_ID_EID_BIT_47_40_S) & PSRAM_ID_EID_BIT_47_40_M)
 #define PSRAM_SIZE_ID(id)            ((PSRAM_EID_BIT_47_40(id) >> PSRAM_EID_BIT_47_45_S) & PSRAM_EID_BIT_47_45_M)

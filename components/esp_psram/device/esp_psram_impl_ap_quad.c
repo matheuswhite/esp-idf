@@ -246,7 +246,27 @@ esp_err_t esp_psram_impl_enable(void)
     mspi_timing_enter_low_speed_mode(true);
 #endif // SOC_SPI_MEM_SUPPORT_TIMING_TUNING
 
+    enum psram_manufacturer {
+        PSRAM_MNF_GENERIC = 0,
+        PSRAM_MNF_ISSI,
+    };
+
+    enum psram_manufacturer psram_manufacturer;
     uint32_t psram_id = 0;
+    const uint32_t psram_size_lut[][3] = {
+        [PSRAM_MNF_GENERIC] = 
+            {
+                PSRAM_SIZE_2MB,
+                PSRAM_SIZE_4MB,
+                PSRAM_SIZE_8MB,
+            },
+        [PSRAM_MNF_ISSI] = 
+            {
+                PSRAM_SIZE_1MB,
+                PSRAM_SIZE_2MB,
+                PSRAM_SIZE_4MB,
+            },
+    };
 
     //We use SPI1 to init PSRAM
     psram_disable_qio_mode(PSRAM_CTRLR_LL_MSPI_ID_1);
@@ -263,13 +283,21 @@ esp_err_t esp_psram_impl_enable(void)
         }
     }
 
+    if (PSRAM_MNF(psram_id) == PSRAM_MNF_ISSI_ID) {
+        psram_manufacturer = PSRAM_MNF_ISSI;
+    } else {
+        psram_manufacturer = PSRAM_MNF_GENERIC;
+    }
+
     if (PSRAM_IS_64MBIT_TRIAL(psram_id)) {
         s_psram_size = PSRAM_SIZE_8MB;
     } else {
         uint8_t density = PSRAM_SIZE_ID(psram_id);
-        s_psram_size = density == 0x0 ? PSRAM_SIZE_2MB :
-                       density == 0x1 ? PSRAM_SIZE_4MB :
-                       density == 0x2 ? PSRAM_SIZE_8MB : 0;
+        if (density >= 0b11) {
+            s_psram_size = 0;
+        } else {
+            s_psram_size = psram_size_lut[psram_manufacturer][density];
+        }
     }
 
     if ((s_psram_size == PSRAM_SIZE_8MB) && s_check_aps3204_2tmode()) {
